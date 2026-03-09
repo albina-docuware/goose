@@ -9,6 +9,7 @@ pub mod permission;
 pub mod search_path;
 pub mod signup_openrouter;
 pub mod signup_tetrate;
+pub mod windows_shell;
 
 pub use crate::agents::ExtensionConfig;
 pub use base::{Config, ConfigError};

@@ -265,8 +265,9 @@ async fn run_command(
 fn build_shell_command(command_line: &str) -> tokio::process::Command {
     #[cfg(windows)]
     let mut command = {
-        let mut command = tokio::process::Command::new("cmd");
-        command.arg("/C").arg(command_line);
+        let shell = crate::config::windows_shell::resolve_windows_shell();
+        let mut command = tokio::process::Command::new(&shell.program);
+        command.arg(&shell.command_flag).arg(command_line);
         command
     };
 
