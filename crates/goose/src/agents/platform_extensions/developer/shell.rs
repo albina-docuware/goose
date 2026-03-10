@@ -267,7 +267,10 @@ fn build_shell_command(command_line: &str) -> tokio::process::Command {
     let mut command = {
         let shell = crate::config::windows_shell::resolve_windows_shell();
         let mut command = tokio::process::Command::new(&shell.program);
-        command.arg(&shell.command_flag).arg(command_line);
+        for arg in &shell.args {
+            command.arg(arg);
+        }
+        command.arg(command_line);
         command
     };
 

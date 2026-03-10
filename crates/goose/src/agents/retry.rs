@@ -234,7 +234,10 @@ pub async fn execute_shell_command(
         let mut cmd = if cfg!(target_os = "windows") {
             let shell = crate::config::windows_shell::resolve_windows_shell();
             let mut cmd = Command::new(&shell.program);
-            cmd.arg(&shell.command_flag).arg(command);
+            for arg in &shell.args {
+                cmd.arg(arg);
+            }
+            cmd.arg(command);
             cmd.env("GOOSE_TERMINAL", "1");
             cmd.env("AGENT", "goose");
             cmd

@@ -5,6 +5,9 @@ import { ResponseStylesSection } from '../response_styles/ResponseStylesSection'
 import { GoosehintsSection } from './GoosehintsSection';
 import { SpellcheckToggle } from './SpellcheckToggle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { WindowsShellSection } from '../shell/WindowsShellSection';
+
+const isWindows = window.electron?.platform === 'win32';
 
 export default function ChatSettingsSection() {
   return (
@@ -41,6 +44,18 @@ export default function ChatSettingsSection() {
           <ResponseStylesSection />
         </CardContent>
       </Card>
+
+      {isWindows && (
+        <Card className="pb-2 rounded-lg">
+          <CardHeader className="pb-0">
+            <CardTitle className="">Windows Shell</CardTitle>
+            <CardDescription>Choose which shell Goose uses for command execution on Windows</CardDescription>
+          </CardHeader>
+          <CardContent className="px-2">
+            <WindowsShellSection />
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="pb-2 rounded-lg">
         <CardContent className="px-2">

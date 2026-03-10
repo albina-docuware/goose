@@ -397,6 +397,50 @@ export GOOSE_SEARCH_PATHS='["/usr/local/bin", "~/custom/tools", "/opt/homebrew/b
 
 These paths are prepended to the system PATH when extensions execute commands, ensuring your custom tools are found without modifying your global PATH.
 
+### Windows Shell Configuration
+
+On Windows, goose needs a shell to execute commands. By default, goose auto-detects Git Bash and prefers it over `cmd.exe`, since Git Bash provides a Unix-compatible environment that works better with AI-generated commands. You can override this with `GOOSE_WINDOWS_SHELL`.
+
+This setting can also be changed in goose Desktop under **Settings > Chat > Windows Shell**.
+
+| Variable | Purpose | Values | Default |
+|----------|---------|---------|---------|
+| `GOOSE_WINDOWS_SHELL` | Shell used for command execution on Windows | `bash`, `gitbash`, `powershell`, `pwsh`, `cmd`, `wsl` | Auto-detect (Git Bash if available, otherwise cmd) |
+
+**Shell options:**
+
+| Value | Shell | Invocation |
+|-------|-------|------------|
+| `bash` | Bash (Git Bash / MSYS2), auto-detected at common paths | `bash -l -c <command>` |
+| `gitbash` | Git Bash at explicit install path | `bash -l -c <command>` |
+| `powershell` | Windows PowerShell 5.1 | `powershell -NoProfile -NonInteractive -Command <command>` |
+| `pwsh` | PowerShell Core (cross-platform) | `pwsh -Login -Command <command>` |
+| `cmd` | Command Prompt | `cmd /C <command>` |
+| `wsl` | Windows Subsystem for Linux | `wsl -- <command>` |
+
+:::warning WSL Note
+When using `wsl`, commands run inside the Linux VM. Windows paths like `C:\Users\...` are accessible at `/mnt/c/Users/...`, but the working directory may not translate automatically.
+:::
+
+**Examples**
+
+```bash
+# Use Git Bash (auto-detected)
+export GOOSE_WINDOWS_SHELL=bash
+
+# Use PowerShell Core
+export GOOSE_WINDOWS_SHELL=pwsh
+
+# Use WSL
+export GOOSE_WINDOWS_SHELL=wsl
+```
+
+Or in `config.yaml`:
+
+```yaml
+GOOSE_WINDOWS_SHELL: bash
+```
+
 ### Enhanced Code Editing
 
 These variables configure [AI-powered code editing](/docs/guides/enhanced-code-editing) for the Developer extension's `str_replace` tool. All three variables must be set and non-empty for the feature to activate.

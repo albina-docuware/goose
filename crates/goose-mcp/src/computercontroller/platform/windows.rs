@@ -5,31 +5,64 @@ use std::process::Command;
 
 pub struct WindowsAutomation;
 
-/// Resolve the shell program and flag from the GOOSE_WINDOWS_SHELL environment variable.
-/// Falls back to PowerShell for system automation scripts (matching the original behavior).
+/// Resolve the shell program and args from the GOOSE_WINDOWS_SHELL environment variable.
+///
+/// This mirrors the logic in `goose::config::windows_shell` but reads only from
+/// the environment variable (this crate does not depend on the goose config crate).
+///
+/// When no shell is configured, auto-detects Git Bash and prefers it over
+/// PowerShell, following Claude Code's Git Bash-first approach on Windows.
 fn resolve_automation_shell() -> (String, Vec<String>) {
-    let shell = std::env::var("GOOSE_WINDOWS_SHELL")
-        .unwrap_or_else(|_| "powershell".to_string());
+    let shell = std::env::var("GOOSE_WINDOWS_SHELL").ok();
 
-    match shell.trim().to_lowercase().as_str() {
-        "cmd" => ("cmd".to_string(), vec!["/C".to_string()]),
-        "pwsh" => (
-            "pwsh".to_string(),
-            vec!["-NoProfile".to_string(), "-NonInteractive".to_string(), "-Command".to_string()],
-        ),
-        "bash" | "gitbash" => {
-            let program = find_git_bash().unwrap_or_else(|| "bash".to_string());
-            (program, vec!["-c".to_string()])
-        }
-        "wsl" => ("wsl".to_string(), vec!["--".to_string()]),
-        // Default: powershell (original behavior for automation)
-        _ => (
+    match shell
+        .as_deref()
+        .map(|s| s.trim().to_lowercase())
+        .as_deref()
+    {
+        Some("cmd") => ("cmd".to_string(), vec!["/C".to_string()]),
+        Some("powershell") => (
             "powershell".to_string(),
-            vec!["-NoProfile".to_string(), "-NonInteractive".to_string(), "-Command".to_string()],
+            vec![
+                "-NoProfile".to_string(),
+                "-NonInteractive".to_string(),
+                "-Command".to_string(),
+            ],
         ),
+        Some("pwsh") => (
+            "pwsh".to_string(),
+            vec!["-Login".to_string(), "-Command".to_string()],
+        ),
+        Some("bash") | Some("gitbash") => {
+            let program = find_git_bash().unwrap_or_else(|| "bash".to_string());
+            (program, vec!["-l".to_string(), "-c".to_string()])
+        }
+        Some("wsl") => ("wsl".to_string(), vec!["--".to_string()]),
+        None => auto_detect_automation_shell(),
+        Some(_) => auto_detect_automation_shell(),
     }
 }
 
+/// Auto-detect the best available shell for automation scripts.
+///
+/// Prefers Git Bash, then falls back to PowerShell (the original automation default).
+fn auto_detect_automation_shell() -> (String, Vec<String>) {
+    if let Some(bash_path) = find_git_bash() {
+        return (bash_path, vec!["-l".to_string(), "-c".to_string()]);
+    }
+
+    // Fall back to PowerShell (original automation behavior)
+    (
+        "powershell".to_string(),
+        vec![
+            "-NoProfile".to_string(),
+            "-NonInteractive".to_string(),
+            "-Command".to_string(),
+        ],
+    )
+}
+
+/// Try to find Git Bash at common Windows install locations.
 fn find_git_bash() -> Option<String> {
     let candidates = [
         r"C:\Program Files\Git\bin\bash.exe",
